@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartBox Designer - Image Copy</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Hind Siliguri', sans-serif; }
+        body { background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; padding: 20px; min-height: 100vh; }
+        .main-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 30px; width: 100%; max-width: 500px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); }
+        textarea { width: 100%; height: 100px; padding: 12px; background: #1e293b; border: 2px solid #334155; color: #fff; border-radius: 10px; margin-bottom: 15px; font-size: 15px; outline: none; }
+        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .control-item { background: rgba(0, 0, 0, 0.2); padding: 5px; border-radius: 8px; text-align: center; }
+        input[type="color"] { cursor: pointer; border: none; background: none; width: 25px; height: 25px; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
+        .btn-gen { background: #fbbf24; color: #000; }
+        .btn-copy { background: #10b981; color: white; }
+        #previewSection { margin-top: 20px; display: none; text-align: center; }
+        .actual-box { display: inline-block; padding: 25px 35px; border-radius: 25px; font-size: 20px; text-align: left; word-wrap: break-word; }
+        .notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 10px 25px; border-radius: 50px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="main-card">
+    <h3 style="text-align: center; color: #fbbf24; margin-bottom: 15px;">📦 SmartBox Designer</h3>
+    <textarea id="textInput" placeholder="এখানে লিখুন..."></textarea>
+    <div class="controls">
+        <div class="control-item"><p style="font-size: 10px;">বক্স</p><input type="color" id="boxColor" value="#1e1b4b"></div>
+        <div class="control-item"><p style="font-size: 10px;">বর্ডার</p><input type="color" id="borderColor" value="#10b981"></div>
+        <div class="control-item"><p style="font-size: 10px;">টেক্সট</p><input type="color" id="textColor" value="#ffffff"></div>
+    </div>
+    <button class="btn btn-gen" onclick="generateBox()">✨ জেনারেট করুন</button>
+    
+    <div id="previewSection">
+        <div id="boxContent" class="actual-box"></div>
+        <div style="margin-top: 20px;">
+            <button class="btn btn-copy" onclick="copyAsImage()">📋 ডিজাইনসহ কপি (Slides-এ পেস্ট হবে)</button>
+        </div>
+    </div>
+</div>
+
+<div id="notification" class="notification">সফল হয়েছে!</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+    function generateBox() {
+        const text = document.getElementById('textInput').value;
+        if (!text.trim()) return;
+        const box = document.getElementById('boxContent');
+        box.style.backgroundColor = document.getElementById('boxColor').value;
+        box.style.border = `6px solid ${document.getElementById('borderColor').value}`;
+        box.style.color = document.getElementById('textColor').value;
+        box.innerHTML = text.replace(/\n/g, '<br>');
+        document.getElementById('previewSection').style.display = 'block';
+    }
+
+    async function copyAsImage() {
+        const element = document.getElementById('boxContent');
+        const canvas = await html2canvas(element, { backgroundColor: null, scale: 2 });
+        
+        canvas.toBlob(async (blob) => {
+            try {
+                const data = [new ClipboardItem({ "image/png": blob })];
+                await navigator.clipboard.write(data);
+                showNote("ডিজাইনসহ ইমেজ কপি হয়েছে! স্লাইডে গিয়ে পেস্ট করুন।");
+            } catch (err) {
+                // কিছু ফোনের জন্য ইমেজ সরাসরি কপি সাপোর্ট নাও করতে পারে, তখন ডাউনলোড হবে।
+                const link = document.createElement('a');
+                link.download = 'box.png';
+                link.href = canvas.toDataURL();
+                link.click();
+                showNote("সরাসরি কপি ফোনে সাপোর্ট করছে না, ডাউনলোড হয়েছে।");
+            }
+        });
+    }
+
+    function showNote(msg) {
+        const note = document.getElementById('notification');
+        note.innerText = msg;
+        note.style.display = 'block';
+        setTimeout(() => { note.style.display = 'none'; }, 3000);
+    }
+</script>
+</body>
+</html>
